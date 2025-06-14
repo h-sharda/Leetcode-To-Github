@@ -1,3 +1,16 @@
+function cleanWhitespace(text) {
+  return (
+    text
+      // Replace various types of spaces with regular spaces
+      .replace(/[\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]/g, " ")
+      // Remove zero-width characters
+      .replace(/[\u200B-\u200D\u2060\uFEFF]/g, "")
+      // Normalize line endings
+      .replace(/\r\n/g, "\n")
+      .replace(/\r/g, "\n")
+  );
+}
+
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.action === "uploadToGitHub") {
     chrome.storage.local.get(
@@ -26,9 +39,11 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         const finalFilename =
           customFilename || `${new Date().getUTCDate()}.txt`;
 
+        const cleanedContent = cleanWhitespace(content);
         const encodedContent = btoa(
-          String.fromCharCode(...new TextEncoder().encode(content))
+          String.fromCharCode(...new TextEncoder().encode(cleanedContent))
         );
+
         const url = `https://api.github.com/repos/${finalUsername}/${finalRepo}/contents/${finalPath}/${finalFilename}`;
 
         try {
