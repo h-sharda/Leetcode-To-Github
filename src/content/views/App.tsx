@@ -457,12 +457,63 @@ function App() {
     }
   };
 
+  useEffect(() => {
+    // Inject the GitHub button into the LeetCode navbar
+    const injectGitHubButton = () => {
+      // Find the IDE buttons container
+      const ideButtonsContainer = document.getElementById("ide-top-btns");
+      if (!ideButtonsContainer) return;
+
+      // Check if button already exists to avoid duplicates
+      if (document.getElementById("github-post-button")) return;
+
+      // Create the GitHub button as a new column
+      const githubButton = document.createElement("div");
+      githubButton.id = "github-post-button";
+      githubButton.className =
+        "group flex flex-none items-center justify-center hover:bg-fill-quaternary dark:hover:bg-fill-quaternary";
+
+      githubButton.innerHTML = `
+        <button
+          class="font-medium items-center whitespace-nowrap focus:outline-none inline-flex rounded-none p-1.5 bg-transparent dark:bg-transparent text-text-primary dark:text-text-primary"
+          data-e2e-locator="github-post-button"
+        >
+          <div class="relative text-[16px] leading-[normal] p-0.5 text-text-secondary dark:text-text-secondary mr-2 flex items-center">
+            <img
+              src="${chrome.runtime.getURL("public/logo.png")}"
+              alt="Leetcode-To-Github"
+              class="h-4 w-4 object-contain"
+            />            
+          </div>
+          <span class="text-sm font-medium">Post to GitHub</span>
+        </button>
+      `;
+
+      // Add click event listener
+      githubButton.addEventListener("click", handlePostToGitHub);
+
+      // Insert the button as a new column after the existing columns
+      ideButtonsContainer.appendChild(githubButton);
+    };
+
+    // Try to inject immediately
+    injectGitHubButton();
+
+    // Also try after a delay in case the DOM isn't ready
+    const timeoutId = setTimeout(injectGitHubButton, 200);
+
+    return () => {
+      clearTimeout(timeoutId);
+      // Clean up the button when component unmounts
+      const existingButton = document.getElementById("github-post-button");
+      if (existingButton) {
+        existingButton.remove();
+      }
+    };
+  }, [handlePostToGitHub]);
+
   return (
     <div className="leetcode-extension">
-      <button className="post-button" onClick={handlePostToGitHub}>
-        Post to GitHub
-      </button>
-
       {showCommitModal && commitData && (
         <CommitModal
           {...commitData}

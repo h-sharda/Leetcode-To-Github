@@ -27,7 +27,7 @@ export default defineManifest({
   options_page: "src/options/index.html",
   web_accessible_resources: [
     {
-      resources: ["public/injected.js"],
+      resources: ["public/*"],
       matches: ["https://leetcode.com/*"],
     },
   ],

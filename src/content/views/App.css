@@ -8,25 +8,14 @@
   pointer-events: none;
 }
 
-.post-button {
-  position: fixed;
-  top: 100px;
-  right: 20px;
-  z-index: 10001;
-  padding: 10px;
-  background-color: #2b3137;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  pointer-events: auto;
-  font-size: 14px;
-  font-weight: 500;
-  transition: background-color 0.3s ease;
-}
-
-.post-button:hover {
-  background-color: #1f2937;
+/* Ensure GitHub button image doesn't affect navbar height */
+#github-post-button img {
+  max-height: 16px;
+  max-width: 16px;
+  height: auto;
+  width: auto;
+  object-fit: contain;
+  vertical-align: middle;
 }
 
 .modal-overlay {
