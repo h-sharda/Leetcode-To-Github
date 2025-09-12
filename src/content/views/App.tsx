@@ -307,7 +307,7 @@ function App() {
 
       githubButton.innerHTML = `
         <button
-          class="font-medium items-center whitespace-nowrap focus:outline-none inline-flex rounded-none p-1.5 bg-transparent dark:bg-transparent text-text-primary dark:text-text-primary"
+          class="font-medium items-center whitespace-nowrap focus:outline-none inline-flex rounded-md p-1.5 bg-fill-quaternary dark:bg-fill-quaternary text-text-primary dark:text-text-primary hover:bg-fill-tertiary dark:hover:bg-fill-tertiary transition-colors"
           data-e2e-locator="github-post-button"
         >
           <div class="relative text-[16px] leading-[normal] p-0.5 text-text-secondary dark:text-text-secondary mr-2 flex items-center">
