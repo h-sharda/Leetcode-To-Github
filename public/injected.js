@@ -2,10 +2,10 @@
   const check = () => {
     if (
       typeof window.monaco !== "undefined" &&
-      monaco.editor.getModels().length > 0
+      window.monaco.editor.getModels().length > 0
     ) {
       try {
-        const value = monaco.editor.getModels()[0].getValue();
+        const value = window.monaco.editor.getModels()[0].getValue();
         window.postMessage(
           {
             source: "leetcode-to-github-extension",
@@ -17,7 +17,7 @@
         window.postMessage(
           {
             source: "leetcode-to-github-extension",
-            error: err.message || "Unkwon error",
+            error: err.message || "Unknown error",
           },
           "*"
         );

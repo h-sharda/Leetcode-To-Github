@@ -1,4 +1,4 @@
-function cleanWhitespace(text) {
+function cleanWhitespace(text: string): string {
   return (
     text
       // Replace various types of spaces with regular spaces
@@ -11,7 +11,21 @@ function cleanWhitespace(text) {
   );
 }
 
-chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+interface UploadPayload {
+  content: string;
+  title: string;
+  customPath?: string;
+  customFilename?: string;
+  customRepo?: string;
+  customUsername?: string;
+}
+
+interface Message {
+  action: string;
+  payload?: UploadPayload;
+}
+
+chrome.runtime.onMessage.addListener((msg: Message) => {
   if (msg.action === "uploadToGitHub") {
     chrome.storage.local.get(
       [
@@ -20,6 +34,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         "githubRepo",
         "defaultPath",
         "defaultFile",
+        "defaultCommit",
+        "defaultComments",
       ],
       async (data) => {
         let { githubToken, githubUsername, githubRepo } = data;
@@ -30,7 +46,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           customFilename,
           customRepo,
           customUsername,
-        } = msg.payload;
+        } = msg.payload!;
 
         // Use custom values if provided, otherwise fall back to defaults
         const finalUsername = customUsername || githubUsername;
@@ -39,6 +55,17 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         const finalFilename =
           customFilename || `${new Date().getUTCDate()}.txt`;
 
+        console.log("Background script received:", {
+          finalUsername,
+          finalRepo,
+          finalPath,
+          finalFilename,
+          customUsername,
+          customRepo,
+          customPath,
+          customFilename,
+        });
+
         const cleanedContent = cleanWhitespace(content);
         const encodedContent = btoa(
           String.fromCharCode(...new TextEncoder().encode(cleanedContent))
@@ -46,9 +73,11 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
         const url = `https://api.github.com/repos/${finalUsername}/${finalRepo}/contents/${finalPath}/${finalFilename}`;
 
+        console.log("GitHub API URL:", url);
+
         try {
           // Check if file exists to get SHA for update
-          let sha = null;
+          let sha: string | null = null;
           try {
             const existingFile = await fetch(url, {
               headers: {
@@ -63,7 +92,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
             // File doesn't exist, that's fine
           }
 
-          const requestBody = {
+          const requestBody: any = {
             message: title,
             content: encodedContent,
           };
@@ -90,7 +119,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
             chrome.notifications.create(successNotificationId, {
               type: "basic",
-              iconUrl: "icon.png",
+              iconUrl: "public/logo.png",
               title: "GitHub Commit Successful",
               message: `File ${finalFilename} committed to ${finalUsername}/${finalRepo}`,
             });
@@ -111,7 +140,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
             chrome.notifications.create(failureNotificationId, {
               type: "basic",
-              iconUrl: "icon.png",
+              iconUrl: "public/logo.png",
               title: "GitHub Commit Failed",
               message: `Failed to commit ${finalFilename}. Click to view error details.`,
             });
@@ -127,7 +156,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
               },
             });
           }
-        } catch (error) {
+        } catch (error: any) {
           console.error("Error committing to GitHub:", error);
 
           // Create network error notification
@@ -135,7 +164,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
           chrome.notifications.create(errorNotificationId, {
             type: "basic",
-            iconUrl: "icon.png",
+            iconUrl: "public/logo.png",
             title: "GitHub Connection Error",
             message: `Network error occurred. Click to view GitHub status.`,
           });
