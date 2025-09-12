@@ -13,17 +13,19 @@ export default function App() {
     githubRepo: "",
     isAuthorized: false,
   });
+  const [isEnabled, setIsEnabled] = useState<boolean>(true);
 
   useEffect(() => {
     // Load settings
     chrome.storage.local.get(
-      ["githubUsername", "githubRepo", "isAuthorized"],
+      ["githubUsername", "githubRepo", "isAuthorized", "extensionEnabled"],
       (data) => {
         setGitAuth({
           githubUsername: data.githubUsername || "",
           githubRepo: data.githubRepo || "",
           isAuthorized: data.isAuthorized || false,
         });
+        setIsEnabled(data.extensionEnabled !== false); // Default to true if not set
       }
     );
   }, []);
@@ -52,30 +54,85 @@ export default function App() {
     });
   };
 
+  const handleToggleEnabled = () => {
+    const newEnabledState = !isEnabled;
+    setIsEnabled(newEnabledState);
+    chrome.storage.local.set({ extensionEnabled: newEnabledState });
+
+    // Send message to all content scripts to update their state
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0]?.id) {
+        chrome.tabs
+          .sendMessage(tabs[0].id, {
+            action: "toggleExtension",
+            enabled: newEnabledState,
+          })
+          .catch(() => {
+            // Ignore errors if content script is not available
+            console.log("Content script not available on this page");
+          });
+      }
+    });
+  };
+
   return (
     <div className="popup-container">
       <header>
-        <h3>Leetcode To GitHub</h3>
+        <div className="logo-container">
+          <img src="/logo.png" alt="LeetCode to GitHub" className="logo" />
+        </div>
+        <h3>LeetCode to GitHub</h3>
+        <p className="description">
+          Automatically sync your LeetCode solutions to GitHub repository to maintain both streaks simultaneously.
+        </p>
       </header>
-      <main>
-        <a href="#" onClick={handleOpenAbout}>
-          <button type="button">About</button>
-        </a>
 
-        <a href="#" onClick={handleOpenSettings}>
-          <button type="button">Settings</button>
-        </a>
+      <div className="toggle-section">
+        <div className="toggle-container">
+          <span className="toggle-label">Extension Status</span>
+          <label className="toggle-switch">
+            <input
+              type="checkbox"
+              checked={isEnabled}
+              onChange={handleToggleEnabled}
+            />
+            <span className="slider"></span>
+          </label>
+        </div>
+        <div
+          className={`status-indicator ${isEnabled ? "enabled" : "disabled"}`}
+        >
+          {isEnabled ? "Enabled" : "Disabled"}
+        </div>
+      </div>
 
-        {gitAuth.isAuthorized && (
-          <a href="#" onClick={handleOpenGitHub}>
-            <button type="button">View Repository</button>
+      {isEnabled && (
+        <main>
+          <a href="#" onClick={handleOpenAbout}>
+            <button type="button">About</button>
           </a>
-        )}
 
-        <a href="#" onClick={handleOpenFeedback}>
-          <button type="button">Send Feedback</button>
-        </a>
-      </main>
+          <a href="#" onClick={handleOpenSettings}>
+            <button type="button">Settings</button>
+          </a>
+
+          {gitAuth.isAuthorized && (
+            <a href="#" onClick={handleOpenGitHub}>
+              <button type="button">View Repository</button>
+            </a>
+          )}
+
+          <a href="#" onClick={handleOpenFeedback}>
+            <button type="button">Send Feedback</button>
+          </a>
+        </main>
+      )}
+
+      {!isEnabled && (
+        <div className="disabled-message">
+          <p>Extension is disabled. Toggle above to enable.</p>
+        </div>
+      )}
     </div>
   );
 }

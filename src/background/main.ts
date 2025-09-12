@@ -27,161 +27,171 @@ interface Message {
 
 chrome.runtime.onMessage.addListener((msg: Message) => {
   if (msg.action === "uploadToGitHub") {
-    chrome.storage.local.get(
-      [
-        "githubToken",
-        "githubUsername",
-        "githubRepo",
-        "defaultPath",
-        "defaultFile",
-        "defaultCommit",
-        "defaultComments",
-      ],
-      async (data) => {
-        let { githubToken, githubUsername, githubRepo } = data;
-        const {
-          content,
-          title,
-          customPath,
-          customFilename,
-          customRepo,
-          customUsername,
-        } = msg.payload!;
+    // Check if extension is enabled before processing upload
+    chrome.storage.local.get(["extensionEnabled"], (enabledData) => {
+      const isEnabled = enabledData.extensionEnabled !== false; // Default to true if not set
 
-        // Use custom values if provided, otherwise fall back to defaults
-        const finalUsername = customUsername || githubUsername;
-        const finalRepo = customRepo || githubRepo;
-        const finalPath = customPath || data.defaultPath || "Leetcode";
-        const finalFilename =
-          customFilename || `${new Date().getUTCDate()}.txt`;
+      if (!isEnabled) {
+        console.log("Extension is disabled, ignoring upload request");
+        return;
+      }
 
-        console.log("Background script received:", {
-          finalUsername,
-          finalRepo,
-          finalPath,
-          finalFilename,
-          customUsername,
-          customRepo,
-          customPath,
-          customFilename,
-        });
+      chrome.storage.local.get(
+        [
+          "githubToken",
+          "githubUsername",
+          "githubRepo",
+          "defaultPath",
+          "defaultFile",
+          "defaultCommit",
+          "defaultComments",
+        ],
+        async (data) => {
+          let { githubToken, githubUsername, githubRepo } = data;
+          const {
+            content,
+            title,
+            customPath,
+            customFilename,
+            customRepo,
+            customUsername,
+          } = msg.payload!;
 
-        const cleanedContent = cleanWhitespace(content);
-        const encodedContent = btoa(
-          String.fromCharCode(...new TextEncoder().encode(cleanedContent))
-        );
+          // Use custom values if provided, otherwise fall back to defaults
+          const finalUsername = customUsername || githubUsername;
+          const finalRepo = customRepo || githubRepo;
+          const finalPath = customPath || data.defaultPath || "Leetcode";
+          const finalFilename =
+            customFilename || `${new Date().getUTCDate()}.txt`;
 
-        const url = `https://api.github.com/repos/${finalUsername}/${finalRepo}/contents/${finalPath}/${finalFilename}`;
-
-        console.log("GitHub API URL:", url);
-
-        try {
-          // Check if file exists to get SHA for update
-          let sha: string | null = null;
-          try {
-            const existingFile = await fetch(url, {
-              headers: {
-                Authorization: `token ${githubToken}`,
-              },
-            });
-            if (existingFile.ok) {
-              const fileData = await existingFile.json();
-              sha = fileData.sha;
-            }
-          } catch (e) {
-            // File doesn't exist, that's fine
-          }
-
-          const requestBody: any = {
-            message: title,
-            content: encodedContent,
-          };
-
-          if (sha) {
-            requestBody.sha = sha;
-          }
-
-          const response = await fetch(url, {
-            method: "PUT",
-            headers: {
-              Authorization: `token ${githubToken}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(requestBody),
+          console.log("Background script received:", {
+            finalUsername,
+            finalRepo,
+            finalPath,
+            finalFilename,
+            customUsername,
+            customRepo,
+            customPath,
+            customFilename,
           });
 
-          if (response.ok) {
-            console.log("Successfully committed to GitHub!");
+          const cleanedContent = cleanWhitespace(content);
+          const encodedContent = btoa(
+            String.fromCharCode(...new TextEncoder().encode(cleanedContent))
+          );
 
-            // Create success notification with unique ID
-            const successNotificationId = `github-success-${Date.now()}`;
-            const githubUrl = `https://github.com/${finalUsername}/${finalRepo}/tree/main/${finalPath}/${finalFilename}`;
+          const url = `https://api.github.com/repos/${finalUsername}/${finalRepo}/contents/${finalPath}/${finalFilename}`;
 
-            chrome.notifications.create(successNotificationId, {
-              type: "basic",
-              iconUrl: "public/logo.png",
-              title: "GitHub Commit Successful",
-              message: `File ${finalFilename} committed to ${finalUsername}/${finalRepo}`,
-            });
+          console.log("GitHub API URL:", url);
 
-            // Store the success URL for this notification
-            chrome.storage.local.set({
-              [successNotificationId]: {
-                type: "success",
-                url: githubUrl,
+          try {
+            // Check if file exists to get SHA for update
+            let sha: string | null = null;
+            try {
+              const existingFile = await fetch(url, {
+                headers: {
+                  Authorization: `token ${githubToken}`,
+                },
+              });
+              if (existingFile.ok) {
+                const fileData = await existingFile.json();
+                sha = fileData.sha;
+              }
+            } catch (e) {
+              // File doesn't exist, that's fine
+            }
+
+            const requestBody: any = {
+              message: title,
+              content: encodedContent,
+            };
+
+            if (sha) {
+              requestBody.sha = sha;
+            }
+
+            const response = await fetch(url, {
+              method: "PUT",
+              headers: {
+                Authorization: `token ${githubToken}`,
+                "Content-Type": "application/json",
               },
+              body: JSON.stringify(requestBody),
             });
-          } else {
-            console.error("Failed to commit:", await response.text());
 
-            // Create failure notification with unique ID
-            const failureNotificationId = `github-failure-${Date.now()}`;
-            const errorResponse = await response.text();
+            if (response.ok) {
+              console.log("Successfully committed to GitHub!");
 
-            chrome.notifications.create(failureNotificationId, {
+              // Create success notification with unique ID
+              const successNotificationId = `github-success-${Date.now()}`;
+              const githubUrl = `https://github.com/${finalUsername}/${finalRepo}/tree/main/${finalPath}/${finalFilename}`;
+
+              chrome.notifications.create(successNotificationId, {
+                type: "basic",
+                iconUrl: "public/logo.png",
+                title: "GitHub Commit Successful",
+                message: `File ${finalFilename} committed to ${finalUsername}/${finalRepo}`,
+              });
+
+              // Store the success URL for this notification
+              chrome.storage.local.set({
+                [successNotificationId]: {
+                  type: "success",
+                  url: githubUrl,
+                },
+              });
+            } else {
+              console.error("Failed to commit:", await response.text());
+
+              // Create failure notification with unique ID
+              const failureNotificationId = `github-failure-${Date.now()}`;
+              const errorResponse = await response.text();
+
+              chrome.notifications.create(failureNotificationId, {
+                type: "basic",
+                iconUrl: "public/logo.png",
+                title: "GitHub Commit Failed",
+                message: `Failed to commit ${finalFilename}. Click to view error details.`,
+              });
+
+              // Store the failure URL and error details
+              chrome.storage.local.set({
+                [failureNotificationId]: {
+                  type: "failure",
+                  url: `https://github.com/${finalUsername}/${finalRepo}/issues`,
+                  error: errorResponse,
+                  filename: finalFilename,
+                  repo: `${finalUsername}/${finalRepo}`,
+                },
+              });
+            }
+          } catch (error: any) {
+            console.error("Error committing to GitHub:", error);
+
+            // Create network error notification
+            const errorNotificationId = `github-error-${Date.now()}`;
+
+            chrome.notifications.create(errorNotificationId, {
               type: "basic",
               iconUrl: "public/logo.png",
-              title: "GitHub Commit Failed",
-              message: `Failed to commit ${finalFilename}. Click to view error details.`,
+              title: "GitHub Connection Error",
+              message: `Network error occurred. Click to view GitHub status.`,
             });
 
-            // Store the failure URL and error details
+            // Store the error URL
             chrome.storage.local.set({
-              [failureNotificationId]: {
-                type: "failure",
-                url: `https://github.com/${finalUsername}/${finalRepo}/issues`,
-                error: errorResponse,
+              [errorNotificationId]: {
+                type: "error",
+                url: "https://www.githubstatus.com/",
+                error: error.message,
                 filename: finalFilename,
                 repo: `${finalUsername}/${finalRepo}`,
               },
             });
           }
-        } catch (error: any) {
-          console.error("Error committing to GitHub:", error);
-
-          // Create network error notification
-          const errorNotificationId = `github-error-${Date.now()}`;
-
-          chrome.notifications.create(errorNotificationId, {
-            type: "basic",
-            iconUrl: "public/logo.png",
-            title: "GitHub Connection Error",
-            message: `Network error occurred. Click to view GitHub status.`,
-          });
-
-          // Store the error URL
-          chrome.storage.local.set({
-            [errorNotificationId]: {
-              type: "error",
-              url: "https://www.githubstatus.com/",
-              error: error.message,
-              filename: finalFilename,
-              repo: `${finalUsername}/${finalRepo}`,
-            },
-          });
         }
-      }
-    );
+      );
+    });
   }
 
   if (msg.action === "openSettings") {
