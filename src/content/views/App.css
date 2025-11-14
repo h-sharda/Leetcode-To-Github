@@ -91,9 +91,11 @@
   /* box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3); */
 }
 
-.modal-header h2 {
+.modal-header h2,
+.modal-header .header-content h2,
+.header-content h2 {
   margin: 0;
-  color: #1f2937;
+  color: #1f2937 !important;
   font-size: 24px;
   font-weight: 700;
   line-height: 1.2;
@@ -101,7 +103,7 @@
 
 .header-subtitle {
   margin: 4px 0 0 0;
-  color: #6b7280;
+  color: #6b7280 !important;
   font-size: 14px;
   font-weight: 400;
 }
@@ -135,6 +137,14 @@
   padding: 20px 24px;
   max-height: calc(90vh - 100px);
   overflow-y: auto;
+  color: #1f2937 !important;
+}
+
+.modal-body p {
+  color: #374151 !important;
+  margin: 0 0 16px 0;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .error-banner {
