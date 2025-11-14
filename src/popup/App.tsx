@@ -83,7 +83,8 @@ export default function App() {
         </div>
         <h3>LeetCode to GitHub</h3>
         <p className="description">
-          Automatically sync your LeetCode solutions to GitHub repository to maintain both streaks simultaneously.
+          Automatically sync your LeetCode solutions to GitHub repository to
+          maintain both streaks simultaneously.
         </p>
       </header>
 
