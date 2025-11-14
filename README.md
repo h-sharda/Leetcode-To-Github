@@ -1,6 +1,6 @@
 # <img src='./public/logo.png' width=32px height=32px style="vertical-align: bottom;"></img> LeetCode to GitHub
 
-A Chrome extension that automatically syncs your LeetCode solutions to your GitHub repository, helping you maintain both your LeetCode and GitHub streaks simultaneously.
+A Browser extension that helps sync your LeetCode solutions to your GitHub repository, helping you maintain both your LeetCode and GitHub streaks simultaneously.
 
 ## Features
 
