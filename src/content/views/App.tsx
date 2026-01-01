@@ -143,7 +143,9 @@ function App() {
     const yy = yyyy.slice(-2);
 
     return {
-      dd,
+      dd, 
+      mm, 
+      yyyy,
       ddmm: `${dd}-${mm}`,
       ddmmyyyy: `${dd}-${mm}-${yyyy}`,
       mmyyyy: `${mm}-${yyyy}`,
