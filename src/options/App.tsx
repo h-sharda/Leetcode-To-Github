@@ -337,6 +337,18 @@ function App() {
                     </tr>
                     <tr>
                       <td>
+                        <code>&lt;YYYY&gt;</code>
+                      </td>
+                      <td>gets date in specified format</td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <code>&lt;MM&gt;</code>
+                      </td>
+                      <td>gets date in specified format</td>
+                    </tr>
+                    <tr>
+                      <td>
                         <code>&lt;DD&gt;</code>
                       </td>
                       <td>gets date in specified format</td>

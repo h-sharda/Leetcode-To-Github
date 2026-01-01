@@ -112,6 +112,8 @@ Use these placeholders in your templates to automatically insert dynamic content
 | `<DD-MM>`        | Current date (DD-MM)                  |
 | `<MM-YYYY>`      | Current date (MM-YYYY)                |
 | `<MM-YY>`        | Current date (MM-YY)                  |
+| `<YYYY>`         | Current date (YYYY)                   |
+| `<MM>`           | Current date (MM)                     |
 | `<DD>`           | Current day                           |
 | `<URL>`          | LeetCode problem URL                  |
 | `<PROBLEM_NAME>` | Problem name                          |
